@@ -11,7 +11,7 @@ function GetToken()
     $word = "";
     while(true)
     {
-        $ch=fgetc(STDIN);
+        $ch=fgetc(STDIN); // nacitanie postupne po znakoch
         switch($state)
         {
             default:
@@ -20,6 +20,18 @@ function GetToken()
                 {   
                     $word = $word.$ch;
                     $state = "header";
+                    continue;
+                }
+
+                if($ch == "L")
+                {
+                    $state="LF";
+                    continue;
+                }
+
+                if($ch == "T")
+                {
+                    $state = "TF";
                     continue;
                 }
 
@@ -51,6 +63,27 @@ function GetToken()
                     
                     if($ch== "@")
                     {
+                        if($word == "GF")
+                        {
+                            $word=$word.$ch;
+                            $state="GF";
+                            continue;
+                        }
+
+                        if($word == "LF")
+                        {
+                            $word=$word.$ch;
+                            $state="LF";
+                            continue;
+                        }
+
+                        if($word == "TF")
+                        {
+                            $word=$word.$ch;
+                            $state="TF";
+                            continue;
+                        }
+
                         if($word=="bool")
                         {
                             $word="";
@@ -79,6 +112,14 @@ function GetToken()
                     }
                     $word=$word.$ch;
                     break;
+            case "GF":
+                    $word=$word.$ch;
+                    if($ch==" "||$ch=="\t"|| $ch == PHP_EOL)
+                    {
+                        echo $word;
+                        return $word;
+                    }
+            
             case "nil":
                     $word=$word.$ch;
                     if($word=="nil")
@@ -202,12 +243,39 @@ function GetToken()
             break;
             
             case "string":
-                $word=$word.$ch;
-                if($ch=="")
+                if($ch == " ")
+                {
+                    echo $word;
+                    return $word;
+                }
 
-            
+
+                if($ch == PHP_EOL)
+                {
+                    echo $word;
+                    return $word;
+                }
+
+                if($ch == "#")
+                {
+                    echo $word;
+                    return $word;
+                }
+// DORIESIT ESCAPE SEKVENCI!!!!!!!!!!!!!!!!!!!!!!!!!!!!1
+                if($ch == "\\")
+                {
+                    $state="esc";
+                    return $word;
+                }
+
+                $word=$word.$ch;
 
             break;
+
+            /*case "esc":
+                if($word==)
+                $word=$word.$ch;
+*/
             case "header":
 
                 $word = $word.$ch;
