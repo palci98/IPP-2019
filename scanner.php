@@ -141,7 +141,6 @@ function GetToken()
                     else if ($ch == "\n" || $ch == "\r" || $ch == "\t" || ord($ch) == 0 || ctype_space($ch))
                     {
                       //$word=$word.$ch;
-                      echo "$word\n";
                       // Zbavime sa posledneho charakteru
                       
                       if(($ch == "\n" || $ch == "\r" || $ch == "\t" || ctype_space($ch)))
@@ -163,12 +162,13 @@ function GetToken()
                     break;
             case "Instruction":
             //echo $word;
-                echo "$ch....\n";
                 for($i=0;$i<count($instructions);$i++)
                 {
-                  if(strtoupper($word) == strtoupper($instructions[$i]))
-                  {
-                      echo $word;
+                  //  echo "toto je word: $word\n";
+                    if(strtoupper($word) == strtoupper($instructions[$i]))
+                    {
+                    //    echo "kokot";
+                      //echo "$word";
                       array_push($result,$word);
                       $state = "default";
                       $word = $ch;
@@ -178,10 +178,15 @@ function GetToken()
                 Error(22);
                     break;
             case "GF":
-                    if($ch==" "||$ch=="\t"|| $ch == PHP_EOL)
+                    if($ch==" "||$ch=="\t"|| $ch == PHP_EOL||ord($ch)==0)
                     {
                         array_push($result,array($word));
                         //return $result;
+                        $word="";
+                        if(ord($ch)== 0)
+                        {
+                            return $result;
+                        }
                         $state="default";
                         continue 2;
                     }
@@ -189,10 +194,14 @@ function GetToken()
             break;
 
             case "LF":
-                    if($ch==" "||$ch=="\t"|| $ch == PHP_EOL)
+                    if($ch==" "||$ch=="\t"|| $ch == PHP_EOL||ord($ch)==0)
                     {
                       array_push($result,array($word,variable));
-                      //return $result;
+                      $word="";
+                      if(ord($ch)== 0)
+                      {
+                          return $result;
+                      }
                       $state="default";
                       continue 2;
                     }
@@ -205,6 +214,7 @@ function GetToken()
                     {
                       array_push($result,array($word,variable));
                       //return $result;
+                      $word="";
                       $state="default";
                       continue 2;
                     }
@@ -365,6 +375,7 @@ function GetToken()
                     if(strtoupper($word) == ".IPPCODE19") //
                     {
                         array_push($result,array(header));
+                        $word="";
                         $state ="default";
                         continue 2;
                     }

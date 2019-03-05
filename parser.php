@@ -6,7 +6,9 @@ $gt=GetToken();
 $count=0;
 
 //echo $gt[0][0];
-
+var_dump($gt);
+//echo count($gt);
+exit(0);
 if(count($gt)>1||$gt[0][0]!=header)
 {
     Error(10);
@@ -24,13 +26,10 @@ $dom->save('sitemap.xml');
 $state="default";           
 while(true)
 {   
-    $gt=GetToken();
-    var_dump($gt);
-    $gt=GetToken();
-    
+    var_dump($gt);    
     var_dump($gt);
     exit(0);
-
+/*
     switch($state)
     {
         default:
@@ -62,5 +61,5 @@ while(true)
         break;
         case "tv":
 
-    }
+    }*/
 }
