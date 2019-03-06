@@ -86,7 +86,7 @@ function GetToken()
                 }
                 else
                 {
-                    Error(21);
+                    exit(23);
                 }
                 break;
 
@@ -102,7 +102,7 @@ function GetToken()
                           continue 3;
                         }
                       }
-                      Error(21);
+                      exit(23);
                     }
 
                     if($word == "LF@")
@@ -116,7 +116,7 @@ function GetToken()
                           continue 3;
                         }
                       }
-                      Error(21);
+                      exit(23);
                     }
 
                     if($word == "TF@")
@@ -130,7 +130,7 @@ function GetToken()
                           continue 3;
                         }
                       }
-                      Error(21);
+                      exit(23);
                     }
 
                     if($ch== "@")
@@ -195,7 +195,7 @@ function GetToken()
                         {
                           if ($i == 0)
                           {
-                            Error(22);
+                            exit(23);
                           }
                           continue;
                         }
@@ -207,7 +207,7 @@ function GetToken()
                         {
                           continue;
                         }
-                        Error(22);
+                        exit(23);
                       }
 
                       array_push($result,array(label,$word));
@@ -277,12 +277,12 @@ function GetToken()
                         }
                         else
                         {
-                            Error(23);
+                            exit(23);
                         }
                     }
                     if (strlen($word) >= 3 || ord($ch) == 0)
                     {
-                      Error(23);
+                      exit(23);
                     }
             break;
 
@@ -303,7 +303,7 @@ function GetToken()
                             }
                             else
                             {
-                                Error(23);
+                                exit(23);
                             }
                         }
                     }
@@ -322,13 +322,13 @@ function GetToken()
                             }
                             else
                             {
-                                Error(23);
+                                exit(23);
                             }
                         }
                     }
                     if (ord($ch) == 0)
                     {
-                      Error(23);
+                      exit(23);
                     }
                     break;
 
@@ -348,7 +348,7 @@ function GetToken()
                     }
                     else
                     {
-                      Error(23);
+                      exit(23);
                     }
                     break;
             case "numberp":
@@ -366,7 +366,7 @@ function GetToken()
                     }
                     else
                     {
-                        Error(23);
+                        exit(23);
                     }
                     break;
 
@@ -382,13 +382,14 @@ function GetToken()
                 }
                 if ($ch == "\\")
                 {
+                  $specialchar = "";
                   for ($i=0; $i < 3; $i++)
                   {
                     $ch = fgetc(STDIN);
 
-                    if (ctype_digit($ch))
+                    if (!ctype_digit($ch))
                     {
-                      Error(23);
+                      exit(23);
                     }
 
                     $specialchar = $specialchar.$ch;
@@ -400,7 +401,7 @@ function GetToken()
                     {
                       if (!($specialchar == 010 || $specialchar == 012 || $specialchar == 032))
                       {
-                        Error(23);
+                        exit(23);
                       }
                     }
                   }
@@ -413,7 +414,7 @@ function GetToken()
                 if(ord($ch)==0)
                 {
 
-                  Error(21);
+                  exit(21);
                 }
 
                 $word = $word.$ch;
@@ -431,7 +432,7 @@ function GetToken()
                     {
                       var_dump($result);
                       echo $word;
-                      Error(21);
+                      exit(21);
 
                     }
                   }
@@ -449,16 +450,3 @@ function GetToken()
     }
 
 }
-function Error($ReturnValue)
-{
-  echo "\nExit: ".$ReturnValue."\n";
-	exit($ReturnValue);
-}
-/*
-$gt=array();
-for($i=0;$i<10;$i++){
-$gt=GetToken();
-var_dump($gt);
-}
-
-*/

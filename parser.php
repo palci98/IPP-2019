@@ -11,15 +11,20 @@ if(count($gt) == 2)
   if ($gt[0][0] != header)
   {
     echo "Header error.\n";
-    Error(10);
+    exit(21);
   }
   if (!($gt[1] == tokenEOF || $gt[1] == tokenEOL))
   {
     echo "Header error.\n";
-    Error(10);
+    exit(21);
   }
-}
 
+}
+else
+{
+  exit(21);
+}
+var_dump($gt);
 
 $dom = new DomDocument('1.0', 'UTF-8');
 $dom->formatOutput = true;
@@ -34,7 +39,7 @@ while(true)
 {
     $gt = GetToken();
 
-    // Skipni prazdne riadky
+    // preskoc prazdne riadky
     if ($gt[0] == tokenEOL)
     {
       continue;
@@ -50,7 +55,7 @@ while(true)
     // Ak to nie je instrukcia tak je chyba
     if ($gt[0][0] != instruction)
     {
-      Error(22);
+      exit(22);
     }
 
     $instruction = $dom->createElement("instruction");
@@ -64,7 +69,7 @@ while(true)
         default:
         case "default":
           echo "Default state reached\n";
-          Error(23);
+          exit(23);
         break;
 
         //
@@ -76,12 +81,12 @@ while(true)
 
           if (count($gt) != 2)
           {
-            Error(23);
+            exit(23);
           }
 
           if (!($gt[1] == tokenEOL || $gt[1] == tokenEOF))
           {
-            Error(23);
+            exit(23);
           }
 
         break;
@@ -93,7 +98,7 @@ while(true)
 
           if (count($gt) != 3)
           {
-            Error(23);
+            exit(23);
           }
 
           if ($gt[1][0] == instruction)
@@ -103,12 +108,12 @@ while(true)
 
           if ($gt[1][0] != label)
           {
-            Error(23);
+            exit(23);
           }
 
           if (!($gt[2] == tokenEOL || $gt[2] == tokenEOF))
           {
-            Error(23);
+            exit(23);
           }
 
           $arg = $dom->createElement("arg1",$gt[1][1]);
@@ -121,19 +126,18 @@ while(true)
         case "POPS":
           if (count($gt) != 3)
           {
-            Error(23);
+            exit(23);
           }
 
           if ($gt[1][0] != variable)
           {
-            Error(23);
+            exit(23);
           }
 
           if (!($gt[2] == tokenEOL || $gt[2] == tokenEOF))
           {
-            Error(23);
+            exit(23);
           }
-
           $arg = $dom->createElement("arg1",$gt[1][1]);
           $arg->setAttribute("type","var");
           $instruction->appendChild($arg);
@@ -147,12 +151,12 @@ while(true)
 
           if (count($gt) != 3)
           {
-            Error(23);
+            exit(23);
           }
 
           if (!($gt[2] == tokenEOL || $gt[2] == tokenEOF))
           {
-            Error(23);
+            exit(23);
           }
 
           $arg = $dom->createElement("arg1",$gt[1][1]);
@@ -179,7 +183,7 @@ while(true)
           }
           else
           {
-            Error(23);
+            exit(23);
           }
           $instruction->appendChild($arg);
 
@@ -194,17 +198,17 @@ while(true)
 
               if (count($gt) != 4)
               {
-                Error(23);
+                exit(23);
               }
 
               if (!($gt[3] == tokenEOL || $gt[3] == tokenEOF))
               {
-                Error(23);
+                exit(23);
               }
 
               if ($gt[1][0] != variable)
               {
-                Error(23);
+                exit(23);
               }
 
               $arg = $dom->createElement("arg1",$gt[1][1]);
@@ -235,7 +239,7 @@ while(true)
               }
               else
               {
-                Error(23);
+                exit(23);
               }
               $instruction->appendChild($arg);
         break;
@@ -245,22 +249,22 @@ while(true)
 
               if (count($gt) != 4)
               {
-                Error(23);
+                exit(23);
               }
 
               if (!($gt[3] == tokenEOL || $gt[3] == tokenEOF))
               {
-                Error(23);
+                exit(23);
               }
 
               if ($gt[1][0] != variable)
               {
-                Error(23);
+                exit(23);
               }
 
               if ($gt[2][0] != type)
               {
-                Error(23);
+                exit(23);
               }
               $arg = $dom->createElement("arg1",$gt[1][1]);
               $arg->setAttribute("type","var");
@@ -289,17 +293,17 @@ while(true)
 
                 if (count($gt) != 5)
                 {
-                  Error(23);
+                  exit(23);
                 }
 
                 if (!($gt[4] == tokenEOL || $gt[4] == tokenEOF))
                 {
-                  Error(23);
+                  exit(23);
                 }
 
                 if ($gt[1][0] != variable)
                 {
-                  Error(23);
+                  exit(23);
                 }
 
                 $arg = $dom->createElement("arg1",$gt[1][1]);
@@ -330,7 +334,7 @@ while(true)
                 }
                 else
                 {
-                  Error(23);
+                  exit(23);
                 }
                 $instruction->appendChild($arg);
 
@@ -358,7 +362,7 @@ while(true)
                 }
                 else
                 {
-                  Error(23);
+                  exit(23);
                 }
                 $instruction->appendChild($arg);
         break;
@@ -369,12 +373,12 @@ while(true)
 
               if (count($gt) != 5)
               {
-                Error(23);
+                exit(23);
               }
 
               if (!($gt[4] == tokenEOL || $gt[4] == tokenEOF))
               {
-                Error(23);
+                exit(23);
               }
 
               if ($gt[1][0] == instruction)
@@ -383,7 +387,7 @@ while(true)
               }
               if ($gt[1][0] != label)
               {
-                Error(23);
+                exit(23);
               }
 
               $arg = $dom->createElement("arg1",$gt[1][1]);
@@ -414,7 +418,7 @@ while(true)
               }
               else
               {
-                Error(23);
+                exit(23);
               }
               $instruction->appendChild($arg);
 
@@ -442,7 +446,7 @@ while(true)
               }
               else
               {
-                Error(23);
+                exit(23);
               }
               $instruction->appendChild($arg);
 
@@ -450,4 +454,4 @@ while(true)
     }
 }
 
-$dom->save('sitemap.xml');
+echo $dom->saveXML();
