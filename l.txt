@@ -1,1 +1,2 @@
-GF@
+.ippcode19
+JUMPIFEQ JUMPIFEQ string@a string@a

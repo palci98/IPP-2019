@@ -8,9 +8,17 @@ $instructions=array("MOVE", "CREATEFRAME", "PUSHFRAME", "POPFRAME", "DEFVAR", "C
 
 const header = 10;
 const variable = 11;
-const constant = 2;
+const constant_int = 22;
+const constant_bool = 23;
+const constant_nil = 24;
+const constant_string = 25;
 const instruction = 3;
+const label = 17;
+const type = 15;
+
 const tokenEOF = 5;
+const tokenEOL = 7;
+
 function GetToken()
 {
     // Specialne znaky, ktore sa mozu nachadzat na zaciatku premennej
@@ -19,19 +27,33 @@ function GetToken()
     $result = array();
     $state = "default";
     $ch = "";
+    $ch2 = "";
     $word = "";
     $count = 0;
+
     while(true)
     {
-        $ch=fgetc(STDIN); // nacitanie postupne po znakoch
+        if ($ch2 != "")
+        {
+          $ch = $ch2;
+          $ch2 = "";
+        }
+        else
+        {
+          $ch=fgetc(STDIN); // nacitanie postupne po znakoch
+        }
+
         switch($state)
         {
             default:
             case "default":
-            if(ord($ch)==0)
-            {
-                return $result;
-            }
+
+
+                if(ord($ch)==0)
+                {
+                    array_push($result,tokenEOF);
+                    return $result;
+                }
                 if($ch == ".")
                 {
                     $word = $word.$ch;
@@ -46,6 +68,7 @@ function GetToken()
 
                 if($ch == PHP_EOL) // ocekovat pred odovzdanim
                 {
+                    array_push($result,tokenEOL);
                     return($result);
                 }
 
@@ -138,55 +161,74 @@ function GetToken()
                         }
                     }
 
-                    else if ($ch == "\n" || $ch == "\r" || $ch == "\t" || ord($ch) == 0 || ctype_space($ch))
+                    else if ($ch == "\n" || $ch == "\r" || $ch == "\t" || ord($ch) == 0 || ctype_space($ch) || $ch == "#")
                     {
-                      //$word=$word.$ch;
-                      // Zbavime sa posledneho charakteru
-                      
-                      if(($ch == "\n" || $ch == "\r" || $ch == "\t" || ctype_space($ch)))
+
+                      // Kontrola ci sa jedna o type
+                      if ($word == "string" || $word == "int" || $word == "nil" || $word == "bool")
                       {
-                      //$word = substr($word,0,strlen($word)-1);
-                      $state="Instruction";
+                        array_push($result,array(type,$word));
+                        $state = "default";
+                        $word = "";
+                        $ch2 = $ch;
+                        continue 2;
+                      }
+
+                      // Kontrola ci sa jedna o instrukciu
+                      for($i=0;$i<count($instructions);$i++)
+                      {
+                        //  echo "toto je word: $word\n";
+                          if(strtoupper($word) == strtoupper($instructions[$i]))
+                          {
+                            array_push($result,array(instruction,$word));
+                            $state = "default";
+                            $word = "";
+                            $ch2 = $ch;
+                            continue 3;
+                        }
+                      }
+
+                      // Kontrola ci sa jedna o label
+                      for ($i=0; $i < strlen($word); $i++)
+                      {
+                        if (ctype_digit($word[$i]))
+                        {
+                          if ($i == 0)
+                          {
+                            Error(22);
+                          }
+                          continue;
+                        }
+                        if (ctype_alpha($word[$i]))
+                        {
+                          continue;
+                        }
+                        if ($word[$i] == "_" || $word[$i] == "-" || $word[$i] == "$" || $word[$i] == "&" || $word[$i] == "%" || $word[$i] == "*" || $word[$i] == "!" || $word[$i] == "?")
+                        {
+                          continue;
+                        }
+                        Error(22);
+                      }
+
+                      array_push($result,array(label,$word));
+                      $state = "default";
+                      $word = "";
+                      $ch2 = $ch;
                       continue 2;
-                      }
-                      else
-                      {
-                          $state = "Instruction";
-                          continue 2;
-                      }
                     }
-                    
+
                     $word=$word.$ch;
 
 
                     break;
-            case "Instruction":
-            //echo $word;
-                for($i=0;$i<count($instructions);$i++)
-                {
-                  //  echo "toto je word: $word\n";
-                    if(strtoupper($word) == strtoupper($instructions[$i]))
-                    {
-                    //    echo "kokot";
-                      //echo "$word";
-                      array_push($result,$word);
-                      $state = "default";
-                      $word = $ch;
-                      continue 3;
-                  }
-                }
-                Error(22);
-                    break;
+
             case "GF":
-                    if($ch==" "||$ch=="\t"|| $ch == PHP_EOL||ord($ch)==0)
+                    if($ch == "\n" || $ch == "\r" || $ch == "\t" || ord($ch) == 0 || ctype_space($ch) || $ch == "#")
                     {
-                        array_push($result,array($word));
+                        array_push($result,array(variable,$word));
                         //return $result;
                         $word="";
-                        if(ord($ch)== 0)
-                        {
-                            return $result;
-                        }
+                        $ch2 = $ch;
                         $state="default";
                         continue 2;
                     }
@@ -194,29 +236,27 @@ function GetToken()
             break;
 
             case "LF":
-                    if($ch==" "||$ch=="\t"|| $ch == PHP_EOL||ord($ch)==0)
+                    if($ch == "\n" || $ch == "\r" || $ch == "\t" || ord($ch) == 0 || ctype_space($ch) || $ch == "#")
                     {
-                      array_push($result,array($word,variable));
-                      $word="";
-                      if(ord($ch)== 0)
-                      {
-                          return $result;
-                      }
-                      $state="default";
-                      continue 2;
+                        array_push($result,array(variable,$word));
+                        //return $result;
+                        $word="";
+                        $ch2 = $ch;
+                        $state="default";
+                        continue 2;
                     }
                     $word=$word.$ch;
             break;
 
             case "TF":
-                    
-                    if($ch==" "||$ch=="\t"|| $ch == PHP_EOL)
+                    if($ch == "\n" || $ch == "\r" || $ch == "\t" || ord($ch) == 0 || ctype_space($ch) || $ch == "#")
                     {
-                      array_push($result,array($word,variable));
-                      //return $result;
-                      $word="";
-                      $state="default";
-                      continue 2;
+                        array_push($result,array(variable,$word));
+                        //return $result;
+                        $word="";
+                        $ch2 = $ch;
+                        $state="default";
+                        continue 2;
                     }
                     $word=$word.$ch;
 
@@ -227,16 +267,22 @@ function GetToken()
                     if($word=="nil")
                     {
                         $ch=fgetc(STDIN);
-                        if($ch==" "||$ch=="\t"|| $ch == PHP_EOL)
+                        if($ch == "\n" || $ch == "\r" || $ch == "\t" || ord($ch) == 0 || ctype_space($ch) || $ch == "#")
                         {
-                          array_push($result,array($word,constant));
-                          return $result;
+                          array_push($result,array(constant_nil,$word));
+                          $word = "";
+                          $ch2 = $ch;
+                          $state = "default";
+                          continue 2;
                         }
-
-                    else
-                    {
-                        Error(21);
+                        else
+                        {
+                            Error(23);
+                        }
                     }
+                    if (strlen($word) >= 3 || ord($ch) == 0)
+                    {
+                      Error(23);
                     }
             break;
 
@@ -247,14 +293,17 @@ function GetToken()
                         if($word=="true")
                         {
                             $ch=fgetc(STDIN);
-                            if($ch==" "||$ch=="\t"|| $ch == PHP_EOL)
+                            if($ch == "\n" || $ch == "\r" || $ch == "\t" || ord($ch) == 0 || ctype_space($ch) || $ch == "#")
                             {
-                              array_push($result,array($word,constant));
-                              return $result;
+                              array_push($result,array(constant_bool,$word));
+                              $word = "";
+                              $ch2 = $ch;
+                              $state = "default";
+                              continue 2;
                             }
                             else
                             {
-                                Error(21);
+                                Error(23);
                             }
                         }
                     }
@@ -263,113 +312,112 @@ function GetToken()
                         if($word=="false")
                         {
                             $ch=fgetc(STDIN);
-                            if($ch==" "||$ch=="\t"|| $ch == PHP_EOL)
+                            if($ch == "\n" || $ch == "\r" || $ch == "\t" || ord($ch) == 0 || ctype_space($ch) || $ch == "#")
                             {
-                              array_push($result,array($word,constant));
-                              return $result;
+                              array_push($result,array(constant_bool,$word));
+                              $word = "";
+                              $ch2 = $ch;
+                              $state = "default";
+                              continue 2;
                             }
                             else
                             {
-                                Error(21);
+                                Error(23);
                             }
                         }
+                    }
+                    if (ord($ch) == 0)
+                    {
+                      Error(23);
                     }
                     break;
 
             case "int":
-                    $word=$word.$ch;
-                    if($ch=="+")
+                    $word = $ch;
+                    if ($ch == "+")
                     {
-                        $state="+";
+                      $state = "numberp";
                     }
-                    else if($ch=="-")
+                    else if ($ch == "-")
                     {
-                        $state="-";
+                      $state = "numberp";
                     }
-
-                    else if(ctype_digit($ch))
+                    else if (ctype_digit($ch))
                     {
-                        $state="numberp";
+                      $state = "numberp";
+                    }
+                    else
+                    {
+                      Error(23);
                     }
                     break;
             case "numberp":
-                    if($ch==PHP_EOL||$ch==" "||$ch=="\t")
+                    if($ch == "\n" || $ch == "\r" || $ch == "\t" || ord($ch) == 0 || ctype_space($ch) || $ch == "#")
                     {
-                        array_push($result,array($word,constant));
-                        return $result;
+                        $ch2 = $ch;
+                        array_push($result,array(constant_int,$word));
+                        $word = "";
+                        $state = "default";
+                        continue 2;
                     }
                     if(ctype_digit($ch))
                     {
                         $word=$word.$ch;
                     }
                     else
-                        {
-                            Error(21,"zle cislo");
-                        }
-                    break;
-            case "+":
-
-                    if($ch==PHP_EOL||$ch==" "||$ch=="\t")
                     {
-                      array_push($result,array($word,constant));
-                      return $result;
+                        Error(23);
                     }
-                    if(ctype_digit($ch))
-                    {
-                        $word=$word.$ch;
-                    }
-                    if(!ctype_digit($ch))
-                        {
-                            Error(21,"zle cislo");
-                        }
                     break;
 
-
-            case "-":
-            if($ch==PHP_EOL||$ch==" "||$ch=="\t")
-            {
-                array_push($result,array($word,constant));
-                return $result;
-            }
-            else if(ctype_digit($ch))
-            {
-                $word=$word.$ch;
-            }
-            else
-                {
-                    Error(21,"zle cislo");
-                }
-            break;
 
             case "string":
-                if($ch == " ")
+                if ($ch == "\n" || $ch == "\r" || $ch == "\t" || ord($ch) == 0 || ctype_space($ch) || $ch == "#")
                 {
-                  array_push($result,array($word,constant));
-                  return $result;
+                  array_push($result,array(constant_string,$word));
+                  $word="";
+                  $state ="default";
+                  $ch2 = $ch;
+                  continue 2;
                 }
-                if($ch == PHP_EOL)
+                if ($ch == "\\")
                 {
-                  array_push($result,array($word,constant));
-                  return $result;
+                  for ($i=0; $i < 3; $i++)
+                  {
+                    $ch = fgetc(STDIN);
+
+                    if (ctype_digit($ch))
+                    {
+                      Error(23);
+                    }
+
+                    $specialchar = $specialchar.$ch;
+                  }
+
+                  if ($specialchar >= 0 && $specialchar <= 999)
+                  {
+                    if ($specialchar < 032)
+                    {
+                      if (!($specialchar == 010 || $specialchar == 012 || $specialchar == 032))
+                      {
+                        Error(23);
+                      }
+                    }
+                  }
+                  $word = $word."\\".$specialchar;
+                  continue 2;
                 }
-                if($ch == "#")
-                {
-                  array_push($result,array($word,constant));
-                  return $result;
-                }
-// DORIESIT ESCAPE SEKVENCI!!!!!!!!!!!!!!!!!!!!!!!!!!!!1
-/*               if($ch == "\\")
-                {
-                    $state="esc";
-                    return $word;
-                }
-                $word=$word.$ch;
-            break;
-            case "esc":
-                if($word==)
-                $word=$word.$ch;
-*/
+                $word = $word.$ch;
+              break;
             case "header":
+                if(ord($ch)==0)
+                {
+
+                  Error(21);
+                }
+
+                $word = $word.$ch;
+
                 if(strlen($word) == 10)
                 {
                     if(strtoupper($word) == ".IPPCODE19") //
@@ -380,18 +428,19 @@ function GetToken()
                         continue 2;
                     }
                     else
-                        Error(21);
-                }
-                if(ord($ch)==0)
-                {
-                    Error(21);
-                }
-                $word = $word.$ch;
+                    {
+                      var_dump($result);
+                      echo $word;
+                      Error(21);
+
+                    }
+                  }
                 break;
 
             case "comment_line":
                 if($ch==PHP_EOL||ord($ch)==0)
                 {
+                    array_push($result,tokenEOL);
                     return $result;
                 }
                 break;
@@ -402,6 +451,7 @@ function GetToken()
 }
 function Error($ReturnValue)
 {
+  echo "\nExit: ".$ReturnValue."\n";
 	exit($ReturnValue);
 }
 /*
